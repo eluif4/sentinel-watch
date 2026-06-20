@@ -2,8 +2,6 @@
 
 A full-stack telemetry audit demo: ingest API request metrics, persist them, detect security-relevant alerts, and push real-time notifications to a React dashboard.
 
-Built as a senior full-stack engineering checkpoint — microservices, message queues, WebSockets, and containerized deployment.
-
 ## What it does
 
 1. The **client** simulates API telemetry events (success or alert-triggering).
