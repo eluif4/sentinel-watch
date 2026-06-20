@@ -2,17 +2,29 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TelemetryService } from './telemetry.service';
 
 describe('TelemetryService', () => {
-  let service: TelemetryService;
+    let service: TelemetryService;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [TelemetryService],
-    }).compile();
+    const mockRabbitClient = {
+        emit: jest.fn(),
+    };
 
-    service = module.get<TelemetryService>(TelemetryService);
-  });
+    beforeEach(async () => {
+        jest.clearAllMocks();
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
+        const module: TestingModule = await Test.createTestingModule({
+            providers: [
+                TelemetryService,
+                {
+                    provide: 'TELEMETRY_SERVICE',
+                    useValue: mockRabbitClient,
+                },
+            ],
+        }).compile();
+
+        service = module.get<TelemetryService>(TelemetryService);
+    });
+
+    it('should be defined', () => {
+        expect(service).toBeDefined();
+    });
 });
