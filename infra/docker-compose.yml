@@ -1,0 +1,70 @@
+services:
+  db:
+    container_name: postgres
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: eluif
+      POSTGRES_DB: sentinelwatch
+    ports: 
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management
+    restart: always # I don't know what this does
+    ports:
+      - "5672:5672"
+      - 15672:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  worker:
+    build: ../worker
+    container_name: worker
+    depends_on:
+      - db
+      - rabbitmq
+    # condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: eluif
+      DB_NAME: sentinelwatch
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      RABBITMQ_TELEMETRY_QUEUE: telemetry_queue
+      RABBITMQ_TELEMETRY_ALERT_QUEUE: telemetry_alert_queue        
+
+  gateway:
+    build: ../gateway
+    container_name: gateway
+    ports:
+      - "3000:3000"
+    # Port forwarding?
+    depends_on:
+      - rabbitmq
+    environment:
+      FRONTEND_URL: http://localhost:5173
+      PORT: 3000
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      RABBITMQ_TELEMETRY_QUEUE: telemetry_queue
+      RABBITMQ_TELEMETRY_ALERT_QUEUE: telemetry_alert_queue
+
+  client:
+    container_name: client
+    ports:
+      - "5173:5173"
+    depends_on:
+      - gateway
+    build: 
+      context: ../client
+      args:
+        VITE_BACKEND_URL: http://localhost:3000
+        VITE_BACKEND_API_ROUTE: api/v1
+
+volumes: 
+  postgres_data:

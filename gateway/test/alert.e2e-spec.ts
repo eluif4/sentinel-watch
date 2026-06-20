@@ -1,0 +1,1 @@
+// Test that the alert is sent to the client
